@@ -1,2 +1,2 @@
-# Data_Pipelines_Projects-V2
-Source codes for data pipelines related with data engineering projects
+# Data_Pipelines_Projects
+This repository represent data pipeline projects and is used for documentation and deploy.

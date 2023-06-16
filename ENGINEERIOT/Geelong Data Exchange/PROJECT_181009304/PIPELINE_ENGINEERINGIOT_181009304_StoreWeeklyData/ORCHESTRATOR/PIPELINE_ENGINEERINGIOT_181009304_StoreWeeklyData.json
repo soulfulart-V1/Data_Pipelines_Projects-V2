@@ -1,0 +1,47 @@
+{
+  "Comment": "Pipeline used to load daily data related to the project Geelong Data Exchange",
+  "StartAt": "EXTRACT IOT DEVICES API REQUEST",
+  "States": {
+    "EXTRACT IOT DEVICES API REQUEST": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "OutputPath": "$.Payload",
+      "Parameters": {
+        "Payload.$": "$",
+        "FunctionName": "arn:aws:lambda:sa-east-1:708253334587:function:EXTRACT_ENGINEERINGIOT_181009304_IoTDevicesList:$LATEST"
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException"
+          ],
+          "IntervalSeconds": 2,
+          "MaxAttempts": 6,
+          "BackoffRate": 2
+        }
+      ],
+      "Next": "JSON to ATHENA TABLE IOT_DEVICES_LIST"
+    },
+    "JSON to ATHENA TABLE IOT_DEVICES_LIST": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::glue:startJobRun",
+      "Parameters": {
+        "JobName": "ENGINEERINGIOT_181009304_Temperature_Humidity__HF_sensors"
+      },
+      "Comment": "Store JSON data in parquet on S3 and in Athena table IOT_DEVICES_LIST",
+      "Next": "ADD PARTITION to IOT_DEVICES_LIST"
+    },
+    "ADD PARTITION to IOT_DEVICES_LIST": {
+      "Type": "Task",
+      "End": true,
+      "Parameters": {
+        "Name": "add_partition_IOT_DEVICES_LIST"
+      },
+      "Resource": "arn:aws:states:::aws-sdk:glue:startCrawler",
+      "Comment": "CRAWLER that automates partition add on table IOT_DEVICES_LIST"
+    }
+  },
+  "TimeoutSeconds": 360
+}

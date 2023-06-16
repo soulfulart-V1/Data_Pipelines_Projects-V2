@@ -1,0 +1,21 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "CloudFormation template for EventBridge rule 'TRIGGER_ENGINEERINGIOT_181009304_StoreDataSets'",
+  "Resources": {
+    "EventRule0": {
+      "Type": "AWS::Events::Rule",
+      "Properties": {
+        "Description": "This TRIGGER a pipeline that stores datasets related to the project Geelong Data Exchange",
+        "EventBusName": "default",
+        "Name": "TRIGGER_ENGINEERINGIOT_181009304_StoreDataSets",
+        "ScheduleExpression": "cron(0 11 ? * * *)",
+        "State": "ENABLED",
+        "Targets": [{
+          "Id": "Ideac0d992-b0b6-4858-be9c-b27cf0dd4546",
+          "Arn": "arn:aws:states:sa-east-1:708253334587:stateMachine:PIPELINE_ENGINEERINGIOT_181009304_StoreDataSets",
+          "RoleArn": "arn:aws:iam::708253334587:role/service-role/Amazon_EventBridge_Invoke_Step_Functions_1017920969"
+        }]
+      }
+    }
+  }
+}

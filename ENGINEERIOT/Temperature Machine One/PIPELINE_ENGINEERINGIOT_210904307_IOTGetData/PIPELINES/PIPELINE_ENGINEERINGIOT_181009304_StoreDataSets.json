@@ -1,0 +1,90 @@
+{
+  "Comment": "Pipeline used to load daily data related to the project Geelong Data Exchange",
+  "StartAt": "Parallel",
+  "States": {
+    "Parallel": {
+      "Type": "Parallel",
+      "Branches": [
+        {
+          "StartAt": "EXTRACT TEMP HUM HF",
+          "States": {
+            "EXTRACT TEMP HUM HF": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::lambda:invoke",
+              "OutputPath": "$.Payload",
+              "Parameters": {
+                "Payload.$": "$",
+                "FunctionName": "arn:aws:lambda:sa-east-1:708253334587:function:EXTRACT_ENGINEERINGIOT_181009304_GET-JSON-URL:$LATEST"
+              },
+              "Retry": [
+                {
+                  "ErrorEquals": [
+                    "Lambda.ServiceException",
+                    "Lambda.AWSLambdaException",
+                    "Lambda.SdkClientException"
+                  ],
+                  "IntervalSeconds": 2,
+                  "MaxAttempts": 6,
+                  "BackoffRate": 2
+                }
+              ],
+              "Next": "JSON to ATHENA TABLE TEMP_HUM_HF_SENSORS"
+            },
+            "JSON to ATHENA TABLE TEMP_HUM_HF_SENSORS": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::glue:startJobRun",
+              "Parameters": {
+                "JobName": "ENGINEERINGIOT_181009304_Temperature_Humidity__HF_sensors",
+                "Arguments": {
+                  "--run_job_date.$": "$.time"
+                }
+              },
+              "Comment": "Store JSON data in parquet on S3 and in Athena table TEMP_HUM_HF_SENSORS",
+              "End": true
+            }
+          }
+        },
+        {
+          "StartAt": "EXTRACT WEATHER TOGETHER",
+          "States": {
+            "EXTRACT WEATHER TOGETHER": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::lambda:invoke",
+              "OutputPath": "$.Payload",
+              "Parameters": {
+                "Payload.$": "$",
+                "FunctionName": "arn:aws:lambda:sa-east-1:708253334587:function:EXTRACT_ENGINEERINGIOT_181009304_WeatherTogetherData:$LATEST"
+              },
+              "Retry": [
+                {
+                  "ErrorEquals": [
+                    "Lambda.ServiceException",
+                    "Lambda.AWSLambdaException",
+                    "Lambda.SdkClientException"
+                  ],
+                  "IntervalSeconds": 2,
+                  "MaxAttempts": 6,
+                  "BackoffRate": 2
+                }
+              ],
+              "Next": "JSON TO ATHENA WEATHER_TOGETHER"
+            },
+            "JSON TO ATHENA WEATHER_TOGETHER": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::glue:startJobRun",
+              "Parameters": {
+                "JobName": "ENGINEERINGIOT_181009304_WEATHER-TOGETHER",
+                "Arguments": {
+                  "--run_job_date.$": "$.time"
+                }
+              },
+              "End": true
+            }
+          }
+        }
+      ],
+      "End": true
+    }
+  },
+  "TimeoutSeconds": 360
+}
